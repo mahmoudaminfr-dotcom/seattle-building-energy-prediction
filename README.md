@@ -1,6 +1,6 @@
 # Seattle Building Energy Prediction API
 
-Service REST de Machine Learning permettant de prédire la consommation énergétique annuelle totale (Site Energy Use, en kBtu) des bâtiments non résidentiels de la ville de Seattle.
+Service REST de Machine Learning permettant de prédire la consommation énergétique annuelle totale météo-normalisée (*Site Energy Use WN*, en kBtu) des bâtiments non résidentiels de la ville de Seattle[cite: 1, 2].
 
 Projet développé avec BentoML, conteneurisé via Docker et déployé en mode serverless sur Google Cloud Run.
 
@@ -8,24 +8,28 @@ Projet développé avec BentoML, conteneurisé via Docker et déployé en mode s
 
 ## 📌 Architecture du projet
 
-- service.py : Service BentoML (API, validation Pydantic, inférence)
-- Dockerfile : Fichier de conteneurisation pour Cloud Run
-- .gcloudignore : Fichiers exclus du build GCP
-- test_api.py : Tests unitaires et d'intégration (pytest)
-- requirements.txt : Dépendances Python du projet
-- README.md : Documentation technique
+- `data/2016_Building_Energy_Benchmarking.csv` : Données réelles de Seattle
+- `notebooks/exploration_et_modelisation.ipynb` : Analyse exploratoire et GridSearchCV
+- `service.py` : Service BentoML (validation Pydantic, inférence)
+- `save_model.py` : Script d'entraînement et de sérialisation
+- `model.joblib` : Artefact du pipeline scikit-learn entraîné
+- `test_api.py` : Suite de tests automatisés (pytest)
+- `Dockerfile` : Image conteneur pour le déploiement Cloud
+- `requirements.txt` : Dépendances Python
+- `.gcloudignore` : Fichiers exclus du build GCP
+- `README.md` : Documentation technique
 
 ---
 
 ## ⚙️ Architecture Technique & Modélisation
 
-- Framework API : BentoML 1.4+ (serveur ASGI haute performance).
-- Validation des schémas : Pydantic v2 (contrôle strict des types, plages de valeurs et coordonnées géographiques).
-- Modèle ML : Pipeline scikit-learn composé de :
-  - Imputation des valeurs manquantes (SimpleImputer).
-  - Normalisation standard (StandardScaler) et encodage catégoriel (OneHotEncoder).
-  - Régresseur GradientBoostingRegressor.
-- Cible transformée : Logarithmique (log(1 + y)) à l'entraînement, recalculée en exponentielle (exp(y) - 1) pour l'inférence en kBtu.
+- **Framework API** : BentoML 1.4+ (serveur ASGI haute performance).
+- **Validation des schémas** : Pydantic v2 (contrôle strict des types, plages de valeurs physiques et coordonnées géographiques de Seattle).
+- **Modèle ML** : Pipeline scikit-learn composé de :
+  - Imputation des valeurs manquantes (`SimpleImputer`).
+  - Normalisation standard (`StandardScaler`) et encodage catégoriel (`OneHotEncoder`).
+  - Régresseur `GradientBoostingRegressor` optimisé par `GridSearchCV` (`learning_rate=0.05`, `n_estimators=200`, `max_depth=3`, `subsample=0.7`, `min_samples_split=5`).
+- **Cible transformée** : Logarithmique (`np.log1p`) à l'entraînement pour corriger l'asymétrie de distribution, recalculée en exponentielle (`np.expm1`) lors de l'inférence pour restituer la valeur physique en kBtu[cite: 1, 2].
 
 ---
 
@@ -33,14 +37,19 @@ Projet développé avec BentoML, conteneurisé via Docker et déployé en mode s
 
 ### 1. Prérequis
 - Python 3.10 ou supérieur
-- pip
+- pip et git
 
 ### 2. Installation des dépendances
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Lancement du serveur BentoML en local
+### 3. LEntraînement et génération de l'artefact
+```
+python save_model.py
+```
+
+### 4. Lancement du serveur BentoML en local
 ```bash
 bentoml serve service:SeattleEnergyService --reload --port 3000
 ```
@@ -53,8 +62,9 @@ L'interface interactive Swagger UI est accessible sur : http://localhost:3000
 
 ### POST /predict
 Prédit la consommation énergétique d'un bâtiment.
-```
+
 Exemple de corps de requête (JSON) :
+```
 {
   "PropertyGFATotal": 88434.0,
   "PropertyGFAParking": 0.0,
@@ -89,7 +99,7 @@ Règles de validation des données (Pydantic) :
 
 ---
 
-## 🧪 Tests Unitaires (pytest)
+## 🧪 Tests Automatisés (pytest)
 
 Une suite de tests automatisés valide la cohérence des prédictions ainsi que le rejet des données aberrantes :
 ```
