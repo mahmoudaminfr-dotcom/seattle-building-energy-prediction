@@ -1,0 +1,7 @@
+bentoml==1.4.39
+scikit-learn
+pandas
+numpy
+pydantic
+joblib
+pytest

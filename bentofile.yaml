@@ -1,0 +1,14 @@
+service: "service:SeattleEnergyService"
+labels:
+  owner: "data-team"
+  project: "seattle-energy-benchmarking"
+include:
+  - "service.py"
+models:
+  - "seattle_energy_pipeline:latest"
+python:
+  packages:
+    - "numpy"
+    - "pandas"
+    - "scikit-learn"
+    - "pydantic"
