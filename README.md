@@ -6,13 +6,14 @@ Projet développé avec BentoML, conteneurisé via Docker et déployé en mode s
 
 ---
 
-## 📌 Architecture du projet
+## Architecture du projet
 
 - `data/2016_Building_Energy_Benchmarking.csv` : Données réelles de Seattle
 - `notebooks/exploration_et_modelisation.ipynb` : Analyse exploratoire et GridSearchCV
 - `service.py` : Service BentoML (validation Pydantic, inférence)
 - `save_model.py` : Script d'entraînement et de sérialisation
 - `model.joblib` : Artefact du pipeline scikit-learn entraîné
+- `bentofile.yaml` : Configuration du build BentoML
 - `test_api.py` : Suite de tests automatisés (pytest)
 - `Dockerfile` : Image conteneur pour le déploiement Cloud
 - `requirements.txt` : Dépendances Python
@@ -21,7 +22,7 @@ Projet développé avec BentoML, conteneurisé via Docker et déployé en mode s
 
 ---
 
-## ⚙️ Architecture Technique & Modélisation
+## Architecture Technique & Modélisation
 
 - **Framework API** : BentoML 1.4+ (serveur ASGI haute performance).
 - **Validation des schémas** : Pydantic v2 (contrôle strict des types, plages de valeurs physiques et coordonnées géographiques de Seattle).
@@ -33,7 +34,7 @@ Projet développé avec BentoML, conteneurisé via Docker et déployé en mode s
 
 ---
 
-## 🚀 Installation & Exécution en local
+## Installation & Exécution en local
 
 ### 1. Prérequis
 - Python 3.10 ou supérieur
@@ -58,7 +59,7 @@ L'interface interactive Swagger UI est accessible sur : http://localhost:3000
 
 ---
 
-## 📡 Spécification de l'API (Endpoints)
+## Spécification de l'API (Endpoints)
 
 ### POST /predict
 Prédit la consommation énergétique d'un bâtiment.
@@ -66,15 +67,17 @@ Prédit la consommation énergétique d'un bâtiment.
 Exemple de corps de requête (JSON) :
 ```
 {
-  "PropertyGFATotal": 88434.0,
-  "PropertyGFAParking": 0.0,
-  "LargestPropertyUseTypeGFA": 88434.0,
-  "NumberofBuildings": 1.0,
-  "NumberofFloors": 12,
-  "BuildingAge": 89.0,
-  "Latitude": 47.612,
-  "Longitude": -122.337,
-  "PrimaryPropertyType_Clean": "Hotel"
+  "data": {
+    "PropertyGFATotal": 88434.0,
+    "PropertyGFAParking": 0.0,
+    "LargestPropertyUseTypeGFA": 88434.0,
+    "NumberofBuildings": 1.0,
+    "NumberofFloors": 12,
+    "BuildingAge": 89.0,
+    "Latitude": 47.612,
+    "Longitude": -122.337,
+    "PrimaryPropertyType_Clean": "Hotel"
+  }
 }
 ```
 
@@ -99,7 +102,7 @@ Règles de validation des données (Pydantic) :
 
 ---
 
-## 🧪 Tests Automatisés (pytest)
+## Tests Automatisés (pytest)
 
 Une suite de tests automatisés valide la cohérence des prédictions ainsi que le rejet des données aberrantes :
 ```
@@ -109,12 +112,16 @@ pytest test_api.py -v
 
 ## ☁️ Déploiement sur Google Cloud Run
 
-L'application est déployée en architecture Serverless sur Google Cloud Run (facturation à la requête, scale-to-zero automatique).
+L'application est déployée en architecture Serverless sur Google Cloud Run.
 
-### Déploiement :
+- **URL publique de l'API :** `https://seattle-energy-service-146864133345.europe-west1.run.app`
+
+
+### Commande de déploiement :
 ```
 gcloud run deploy seattle-energy-service --source . --region europe-west1 --port 3000 --memory 1Gi --allow-unauthenticated --quiet
 ```
+
 
 ### Suppression du service :
 ```
