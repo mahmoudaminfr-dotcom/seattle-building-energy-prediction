@@ -1,6 +1,6 @@
 # Seattle Building Energy Prediction API
 
-Service REST de Machine Learning permettant de prédire la consommation énergétique annuelle totale météo-normalisée (*Site Energy Use WN*, en kBtu) des bâtiments non résidentiels de la ville de Seattle[cite: 1, 2].
+Service REST de Machine Learning permettant de prédire la consommation énergétique annuelle totale météo-normalisée (*Site Energy Use WN*, en kBtu) des bâtiments non résidentiels de la ville de Seattle.
 
 Projet développé avec BentoML, conteneurisé via Docker et déployé en mode serverless sur Google Cloud Run.
 
